@@ -5,6 +5,7 @@ Django settings for bus_booking_backend project.
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+import dj_database_url
 
 load_dotenv()
 
@@ -65,10 +66,11 @@ TEMPLATES = [
 WSGI_APPLICATION = 'bus_booking_backend.wsgi.application'
 
 # Database Configuration
-# Priority: DATABASE_URL (Render) > Individual vars (Supabase) > SQLite (local)
+# For Render: Use DATABASE_URL (automatically provided by Render PostgreSQL)
+# For local: Use individual DB_* environment variables or SQLite fallback
+
+# Try to use DATABASE_URL first (Render PostgreSQL)
 if os.getenv('DATABASE_URL'):
-    # Use DATABASE_URL for Render PostgreSQL
-    import dj_database_url
     DATABASES = {
         'default': dj_database_url.config(
             default=os.getenv('DATABASE_URL'),
@@ -76,23 +78,20 @@ if os.getenv('DATABASE_URL'):
             conn_health_checks=True,
         )
     }
+# Otherwise use individual environment variables (Supabase or other PostgreSQL)
 elif os.getenv('DB_HOST') and os.getenv('DB_PASSWORD'):
-    # Use individual env vars for Supabase
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
             'NAME': os.getenv('DB_NAME', 'postgres'),
             'USER': os.getenv('DB_USER', 'postgres'),
-            'PASSWORD': os.getenv('DB_PASSWORD'),
-            'HOST': os.getenv('DB_HOST'),
+            'PASSWORD': os.getenv('DB_PASSWORD', ''),
+            'HOST': os.getenv('DB_HOST', 'localhost'),
             'PORT': os.getenv('DB_PORT', '5432'),
-            'OPTIONS': {
-                'connect_timeout': 10,
-            }
         }
     }
+# SQLite fallback for local development
 else:
-    # SQLite fallback for local development
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',

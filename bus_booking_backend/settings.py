@@ -79,11 +79,13 @@ WSGI_APPLICATION = 'bus_booking_backend.wsgi.application'
 # For Render: Use DATABASE_URL (automatically provided by Render PostgreSQL)
 # For local: Use individual DB_* environment variables or SQLite fallback
 
-# Try to use DATABASE_URL first (Render PostgreSQL)
-if os.getenv('DATABASE_URL'):
+# Try to use DATABASE_URL first (Render PostgreSQL). An empty value can be
+# present in Render's environment, so normalize it before deciding.
+database_url = os.getenv('DATABASE_URL', '').strip()
+if database_url:
     DATABASES = {
         'default': dj_database_url.config(
-            default=os.getenv('DATABASE_URL'),
+            default=database_url,
             conn_max_age=600,
             conn_health_checks=True,
         )

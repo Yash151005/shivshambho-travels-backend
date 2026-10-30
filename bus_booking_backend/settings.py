@@ -4,6 +4,7 @@ Django settings for bus_booking_backend project.
 
 import os
 from pathlib import Path
+from urllib.parse import urlparse
 from dotenv import load_dotenv
 import dj_database_url
 
@@ -82,7 +83,8 @@ WSGI_APPLICATION = 'bus_booking_backend.wsgi.application'
 # Try to use DATABASE_URL first (Render PostgreSQL). An empty value can be
 # present in Render's environment, so normalize it before deciding.
 database_url = os.getenv('DATABASE_URL', '').strip()
-if database_url:
+database_scheme = urlparse(database_url).scheme.lower()
+if database_scheme in {'postgres', 'postgresql', 'pgsql'}:
     DATABASES = {
         'default': dj_database_url.config(
             default=database_url,
